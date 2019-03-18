@@ -1,0 +1,64 @@
+sensor.measure()
+def read_temp():
+  global temp
+  temp = 0
+  try:
+    temp = sensor.temperature()
+    if isinstance(temp, float):
+      msgt = (b'{0:3.1f}'.format(temp))
+      return(msgt)
+    else:
+      return('Invalid temperature reading!')
+  except OSError as e:
+    return('Failed to read temperature!')
+    
+def read_hum():
+  global hum
+  hum = 0
+  try:
+    hum = sensor.humidity()
+    if isinstance(hum, float):
+      msgh = (b'{0:3.1f}'.format(hum))
+      return(msgh)
+    else:
+      return('Invalid humidity reading!')
+  except OSError as e:
+    return('Failed to read humidity!')
+
+def sub_cb(topic, msg):
+  print((topic, msg))
+  if msg == b'on':
+    led.value(1)
+  elif msg == b'off':
+    led.value(0)
+
+def connect_and_subscribe():
+  global client_id, mqtt_server, topic_sub
+  client = MQTTClient(client_id, mqtt_server)
+  client.set_callback(sub_cb)
+  client.connect()
+  client.subscribe(topic_sub)
+  print('Connected to %s MQTT broker, subscribed to %s topic' % (mqtt_server, topic_sub))
+  return client
+
+def restart_and_reconnect():
+  print('Failed to connect to MQTT broker. Reconnecting...')
+  time.sleep(10)
+  machine.reset()
+
+try:
+  client = connect_and_subscribe()
+except OSError as e:
+  restart_and_reconnect()
+
+while True:
+  try:
+    client.check_msg()
+    if (time.time() - last_sensor_reading) > readings_interval:
+      msgt = read_temp()
+      msgh = read_hum()
+      client.publish(topic_pubt, msgt)
+      client.publish(topic_pubh, msgh)
+      last_sensor_reading = time.time()
+  except OSError as e:
+    restart_and_reconnect()
