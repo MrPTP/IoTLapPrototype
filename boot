@@ -12,8 +12,8 @@ esp.osdebug(None)
 import gc
 gc.collect()
 
-ssid = 'TNCAP1A2F1B'
-password = '1D7DF9B8FC'
+ssid = 'Replace_With_Wifi_Name'
+password = 'Replace_With_Wifi_Password'
 mqtt_server = '192.168.1.152'
 client_id = ubinascii.hexlify(machine.unique_id())
 topic_sub = b'output'
